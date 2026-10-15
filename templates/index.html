@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>개발 채용 노트</title><link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"><script src="{{ url_for('static',filename='script.js') }}" defer></script></head>
+<body><main>
+<header><div><p class="eyebrow">SARAMIN · IT / DATA</p><h1>개발 채용 노트</h1></div><span class="date">{{ today }}</span></header>
+{% for category, message in get_flashed_messages(with_categories=true) %}<p class="notice {{ category }}" role="status">{{ message }}</p>{% endfor %}
+<section class="stats" aria-label="신규 공고 통계">
+{% for label in ['오늘','최근 7일','최근 30일'] %}<a class="stat" href="{{ url_for('index',period=[1,7,30][loop.index0]) }}"><span>{{ label }} 신규 IT 공고</span><strong>{{ counts[loop.index0] }}<small>개</small></strong></a>{% endfor %}
+</section>
+<section class="tag-section" aria-label="관심 태그"><h2>관심 태그</h2><div class="tag-chips">
+{% for tag in tags %}<div class="tag-chip {{ 'selected' if tag_id==tag.id else '' }}">
+<a href="{{ url_for('index',period=period) if tag_id==tag.id else url_for('index',tag=tag.id,period=period) }}" {% if tag_id==tag.id %}aria-current="true"{% endif %}>{{ tag.keyword }} <span class="chip-count">{{ tag.job_count }}</span></a>
+<form method="post" action="{{ url_for('update_tag',tag_id=tag.id,action='toggle') }}"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="chip-button" aria-label="{{ tag.keyword }} 알림 {{ '끄기' if tag.alarm_enabled else '켜기' }}" aria-pressed="{{ 'true' if tag.alarm_enabled else 'false' }}" title="알림 {{ 'ON' if tag.alarm_enabled else 'OFF' }}">{{ '🔔' if tag.alarm_enabled else '🔕' }}</button></form>
+<form method="post" action="{{ url_for('update_tag',tag_id=tag.id,action='delete') }}" data-confirm="태그를 삭제할까요?"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="chip-button" aria-label="{{ tag.keyword }} 삭제" title="삭제">×</button></form>
+</div>{% endfor %}
+<details class="tag-add"><summary>+ 태그 추가</summary><form method="post" action="{{ url_for('add_tag') }}" class="add-form"><input type="hidden" name="csrf" value="{{ session.csrf }}"><label for="keyword">새 관심 태그</label><div><input id="keyword" name="keyword" maxlength="50" placeholder="Python, LLM, FastAPI…" required><button class="primary">추가</button></div></form></details>
+</div></section>
+<section><div class="list-heading"><h2>{{ selected_tag.keyword if selected_tag else ('오늘' if period=='1' else '최근 '+period+'일') }} 공고 <small>{{ jobs|length }}개</small></h2><div>{% if selected_tag %}<form method="post" action="{{ url_for('update_tag',tag_id=selected_tag.id,action='refresh') }}" class="refresh-form"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button>재수집</button></form>{% endif %} <a href="{{ url_for('index',period=period) }}">전체 보기</a></div></div>
+{% for job in jobs %}<article class="job"><p class="company">{{ job.company }}</p><h3><a href="{{ job.url }}" target="_blank" rel="noopener noreferrer">{{ job.title }} ↗</a></h3><div class="sectors">{% for sector in job.sectors %}<span>{{ sector }}</span>{% endfor %}</div><dl>{% for label,key in [('지역','location'),('경력·고용','experience_employment'),('학력','education'),('급여','salary')] %}<div><dt>{{ label }}</dt><dd>{{ job[key] or '미표기' }}</dd></div>{% endfor %}</dl><footer><span>마감 {{ job.deadline or '미표기' }}</span><span>{{ job.stat_date or job.first_seen_at[:10] }}</span></footer></article>{% else %}<div class="empty"><h3>해당 기간의 공고가 없습니다.</h3></div>{% endfor %}
+</section>
+</main></body></html>

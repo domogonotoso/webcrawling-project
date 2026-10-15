@@ -1,0 +1,17 @@
+.runtime/
+__pycache__/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.env
+.env.*
+.aws/
+.codex/
+.agents/
+*.pem
+*.key
+saramin_sample.html
+saramin_last_sample.html
+crawl/
+레고이미지/
